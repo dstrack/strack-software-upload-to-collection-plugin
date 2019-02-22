@@ -1,7 +1,7 @@
 {
-  "name": "Filter Uploaded Data",
-  "version": "1.0.3",
-  "description": "Process plugin for filtering uploaded data",
+  "name": "Upload to Collection",
+  "version": "1.0.4",
+  "description": "Process plugin for upload to apex_collections",
   "keywords": ["import", "upload", "collections"],
   "homepage": "https://github.com/dstrack/strack-software-upload-to-collection",
   "bugs": {
