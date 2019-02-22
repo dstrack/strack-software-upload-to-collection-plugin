@@ -1,0 +1,33 @@
+{
+  "name": "Filter Uploaded Data",
+  "version": "1.0.3",
+  "description": "Process plugin for filtering uploaded data",
+  "keywords": ["import", "upload", "collections"],
+  "homepage": "https://github.com/dstrack/strack-software-upload-to-collection",
+  "bugs": {
+    "url": "https://github.com/dstrack/strack-software-upload-to-collection-plugin/issues",
+    "email": "strack.software@t-online.de"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Dirk Strack",
+    "email": "strack.software@t-online.de",
+    "url": "https://strack-software-development.blogspot.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dstrack/strack-software-upload-to-collection-plugin.git"
+  },
+  "oracle": {
+    "versions": ["11.2.0.1", "12.1.0.1"],
+    "apex": {
+      "versions": ["5.1.0", "12.2.0"],
+      "plugin": {
+        "internalName": "COM.STRACK-SOFTWARE.UPLOAD_TO_COLLECTION",
+        "type": "process",
+        "demo": "https://apex.oracle.com/pls/apex/f?p=103003:LOGIN_DESKTOP",
+        "previewImage": "https://raw.githubusercontent.com/dstrack/strack-software-upload-to-collection-plugin/master/preview.png"
+      }
+    }
+  }
+}
