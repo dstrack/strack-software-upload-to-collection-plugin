@@ -40,6 +40,7 @@ IS
     TYPE ref_cursor IS REF CURSOR;
 	TYPE tab_apex_collections IS TABLE OF APEX_COLLECTIONS%ROWTYPE;
 	FUNCTION pipe_rows ( p_Collection_Name VARCHAR2 DEFAULT NULL ) RETURN tab_apex_collections PIPELINED;
+	FUNCTION next_seq_id ( p_Collection_Name VARCHAR2 ) RETURN NUMBER;
 END;
 /
 show errors
@@ -65,6 +66,15 @@ $END
 		end loop;
 		RETURN;
 	END pipe_rows;
+	
+	FUNCTION next_seq_id ( p_Collection_Name VARCHAR2 ) RETURN NUMBER
+	IS
+		v_Result NUMBER;
+	BEGIN
+		select NVL(MAX(SEQ_ID),0) INTO v_Result
+		from APEX_COLLECTIONS where COLLECTION_NAME = p_Collection_Name;
+		RETURN v_Result;
+	END;
 END;
 /
 show errors

@@ -1,6 +1,6 @@
 {
   "name": "Upload to Collection",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Process plugin for upload to apex_collections",
   "keywords": ["import", "upload", "collections"],
   "homepage": "https://github.com/dstrack/strack-software-upload-to-collection-plugin",
