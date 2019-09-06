@@ -34,10 +34,10 @@ Usage:
 	
 	SELECT C001, C002 FROM V_APEX_COLLECTIONS WHERE COLLECTION_NAME = 'MY_COLLECTION' AND SEQ_ID = 1;
 */
+
 CREATE OR REPLACE PACKAGE Pipe_Apex_Collections
  AUTHID DEFINER
 IS
-    TYPE ref_cursor IS REF CURSOR;
 	TYPE tab_apex_collections IS TABLE OF APEX_COLLECTIONS%ROWTYPE;
 	FUNCTION pipe_rows ( p_Collection_Name VARCHAR2 DEFAULT NULL ) RETURN tab_apex_collections PIPELINED;
 	FUNCTION next_seq_id ( p_Collection_Name VARCHAR2 ) RETURN NUMBER;
@@ -54,7 +54,7 @@ IS
 $IF DBMS_DB_VERSION.VERSION >= 12 $THEN
 	PRAGMA UDF;
 $END
-		c_cur  ref_cursor;
+		c_cur  SYS_REFCURSOR;
 		v_row APEX_COLLECTIONS%ROWTYPE; -- output row
 	BEGIN
 		OPEN c_cur FOR

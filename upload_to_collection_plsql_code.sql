@@ -351,7 +351,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 
 		for c_rows in (
 			SELECT S.Column_Value, ROWNUM Line_No
-			FROM TABLE( upload_to_collection_plugin.Split_Clob(v_Clob, v_Enclosed_By, v_New_Line) ) S
+			FROM TABLE( upload_to_collection_plugin.Split_Clob(v_Clob, p_Enclosed_By, v_New_Line) ) S
 		)
 		loop
 			if c_rows.Column_Value IS NOT NULL then
@@ -369,12 +369,15 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 				elsif v_Row_Cnt > 1 or p_First_Row = 'N' then
 					v_Seq_ID := APEX_COLLECTION.ADD_MEMBER ( p_collection_name => p_Collection_Name );
 					for c_idx IN 1..v_Column_Limit loop
-						v_Cell_Value := case 
-							when v_Enclosed_By IS NOT NULL then 
-								REPLACE(v_Line_Array(c_idx), v_Enclosed_By||v_Enclosed_By, v_Enclosed_By)
-							else 
-								v_Line_Array(c_idx)
-							end;
+						if p_Enclosed_By IS NOT NULL then 
+							v_Cell_Value := REPLACE(v_Line_Array(c_idx), p_Enclosed_By||p_Enclosed_By, p_Enclosed_By);
+							if SUBSTR(v_Cell_Value, 1, 1) = p_Enclosed_By
+							and SUBSTR(v_Cell_Value, -1, 1) = p_Enclosed_By then
+								v_Cell_Value := SUBSTR(v_Cell_Value, 2, LENGTH(v_Cell_Value)-2);
+							end if;
+						else 
+							v_Cell_Value := v_Line_Array(c_idx);
+						end if;
 						APEX_COLLECTION.UPDATE_MEMBER_ATTRIBUTE (
 							p_collection_name => p_Collection_Name,
 							p_seq => v_Seq_ID,
