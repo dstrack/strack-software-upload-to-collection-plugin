@@ -66,11 +66,12 @@ No pl/sql code is required to perform the DML operations.
 */
 
 CREATE OR REPLACE PACKAGE upload_to_collection_plugin
+AUTHID CURRENT_USER
 IS
 	TYPE cur_type IS REF CURSOR;
 	g_msg_file_name_empty 	CONSTANT VARCHAR2(50) := 'File name is empty.';
 	g_msg_file_empty 		CONSTANT VARCHAR2(50) := 'File content is empty.';
-	g_msg_no_data_found		CONSTANT VARCHAR2(50) := 'No data found.';
+	g_msg_no_data_found		CONSTANT VARCHAR2(50) := 'No valid data found in import file.';
 	g_msg_line_delimiter 	CONSTANT VARCHAR2(50) := 'Line delimiter not found.';
 	g_msg_separator 		CONSTANT VARCHAR2(50) := 'Separator not found in first line.';
 	g_msg_process_success 	CONSTANT VARCHAR2(100) := '%0 rows have been loaded.';
