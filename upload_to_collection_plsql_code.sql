@@ -229,7 +229,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 				v_pos2 := dbms_lob.instr( p_clob, v_delimiter, v_pos );
 				if v_pos2 = 0 then -- process last line
 					v_pos2 := v_loblen;
-					v_linelen := least(v_pos2 - v_pos, g_linemaxsize);
+					v_linelen := least(v_pos2 - v_pos + v_dellen, g_linemaxsize);
 					v_Row_Line := dbms_lob.substr( p_clob, v_linelen, v_pos );
 				else
 					v_linelen := least(v_pos2 - v_pos, g_linemaxsize);
@@ -253,6 +253,51 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		return ;
 	END;
 
+	FUNCTION Find_Column_Delimiter (
+		p_clob 			IN CLOB,
+		p_New_Line 		IN VARCHAR2
+	) RETURN VARCHAR2
+	is
+		v_Row_Line 			VARCHAR2(32767);
+		v_Row_Line2 		VARCHAR2(32767);
+		v_Column_Cnt 		PLS_INTEGER;
+		v_Column_Cnt2 		PLS_INTEGER;
+		v_Offset	 		PLS_INTEGER;
+		v_Offset2	 		PLS_INTEGER;
+		v_Column_Delimiter 	VARCHAR2(10);
+		v_Nllen PLS_INTEGER := LENGTH(p_New_Line);
+	begin 
+	
+		for c_rows in (
+			SELECT S.Column_Value, ROWNUM Line_No
+			FROM TABLE( apex_string.split(p_str => chr(9)||':;:,', p_sep => ':') ) S
+		)
+		loop
+			v_Column_Delimiter := c_rows.Column_Value;
+			v_Offset   := dbms_lob.instr(p_Clob, p_New_Line);
+			v_Row_Line := dbms_lob.substr(p_clob, v_Offset - 1, 1);
+			v_Column_Cnt := 1 + LENGTH(v_Row_Line) - LENGTH(REPLACE(v_Row_Line, v_Column_Delimiter));
+
+			v_Offset2   := dbms_lob.instr(p_clob, p_New_Line, v_Offset+v_Nllen);
+			v_Row_Line2 := dbms_lob.substr(p_clob, v_Offset2 - v_Offset - v_Nllen, v_Offset+v_Nllen );
+			if LENGTH(v_Row_Line2) > 0 then 
+				v_Column_Cnt2 := 1 + LENGTH(v_Row_Line2) - LENGTH(REPLACE(v_Row_Line2, v_Column_Delimiter));
+			else 
+				v_Column_Cnt2 := v_Column_Cnt;
+			end if;
+			if apex_application.g_debug then
+				apex_debug.info('Find_Column_Delimiter : %s', v_Column_Delimiter);
+				apex_debug.info('v_Column_Cnt : %s. Import_Row_Line : #%s#', v_Column_Cnt, v_Row_Line);
+				apex_debug.info('v_Column_Cnt2 : %s. Import_Row_Line2 : #%s#', v_Column_Cnt2, v_Row_Line2);
+			end if;
+			if v_Column_Cnt > 1 and v_Column_Cnt = v_Column_Cnt2 then 
+				return v_Column_Delimiter;
+			end if;
+		end loop;
+		
+		return v_Column_Delimiter;
+	end;
+	
 	PROCEDURE Upload_to_Apex_Collection (
 		p_Import_From		IN VARCHAR2, -- UPLOAD or PASTE. UPLOAD will be replaced by PASTE
 		p_Column_Delimiter  IN VARCHAR2,
@@ -286,10 +331,6 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		dbms_lob.createtemporary(v_Clob, true, dbms_lob.call);
 		apex_collection.create_or_truncate_collection(p_collection_name=>p_Collection_Name);
 
-		v_Column_Delimiter :=
-			case p_Column_Delimiter
-			when '\t' then chr(9)
-			else p_Column_Delimiter end;
 		v_Enclosed_By := p_Enclosed_By;
 
 		if p_Import_From = 'UPLOAD' then
@@ -333,14 +374,22 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 			p_Message := g_msg_line_delimiter;
 			return;
 		end if;
-
-		v_Row_Line := SUBSTR(v_Clob, 1, v_Offset - 1);
+		-- set Column Delimiter
+		if p_Column_Delimiter IS NULL then 
+			v_Column_Delimiter := Find_Column_Delimiter(v_Clob, v_New_Line);
+		else 
+			v_Column_Delimiter :=
+				case p_Column_Delimiter
+				when '\t' then chr(9)
+				else p_Column_Delimiter end;
+		end if;
+		-- probe Column Delimiter
+		v_Row_Line := dbms_lob.substr( v_clob, v_Offset - 1, 1 );
 		v_Column_Cnt := 1 + LENGTH(v_Row_Line) - LENGTH(REPLACE(v_Row_Line, v_Column_Delimiter));
-		if v_Column_Cnt = 0 then
+		if v_Column_Cnt = 1 and p_Column_Delimiter IS NOT NULL then
 			p_Message := g_msg_separator;
 			return;
 		end if;
-
 		-- probe optionally enclosed by
 		if SUBSTR(v_Row_Line, 1, 1) = v_Enclosed_By
 		and SUBSTR(RTRIM(v_Row_Line, v_Column_Delimiter||' '), -1, 1) = v_Enclosed_By
@@ -349,7 +398,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		else
 			v_Enclosed_By := NULL;
 		end if;
-
+		
 		for c_rows in (
 			SELECT S.Column_Value, ROWNUM Line_No
 			FROM TABLE( upload_to_collection_plugin.Split_Clob(v_Clob, p_Enclosed_By, v_New_Line) ) S
@@ -362,6 +411,10 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 								else c_rows.Column_Value end;
 				v_Line_Array := apex_string.split(p_str => v_Row_Line, p_sep => v_Column_Delimiter);
 				v_Column_Limit := LEAST(v_Line_Array.count, g_Collection_Cols_Limit);
+				if v_Column_Limit != v_Column_Cnt then 
+					p_Message := g_msg_separator;
+					return;
+				end if;
 				if apex_application.g_debug then
 					apex_debug.info('%s. Import_Row_Line : #%s#', v_Row_Cnt, v_Row_Line);
 				end if;
