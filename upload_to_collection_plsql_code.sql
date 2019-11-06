@@ -270,12 +270,12 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 	
 		for c_rows in (
 			SELECT S.Column_Value, ROWNUM Line_No
-			FROM TABLE( apex_string.split(p_str => chr(9)||':;:,', p_sep => ':') ) S
+			FROM TABLE( apex_string.split(p_str => chr(9)||':#:|:;:,', p_sep => ':') ) S
 		)
 		loop
 			v_Column_Delimiter := c_rows.Column_Value;
 			v_Offset   := dbms_lob.instr(p_Clob, p_New_Line);
-			v_Row_Line := dbms_lob.substr(p_clob, v_Offset - 1, 1);
+			v_Row_Line := RTRIM(dbms_lob.substr(p_clob, v_Offset - 1, 1), v_Column_Delimiter);
 			v_Column_Cnt := 1 + LENGTH(v_Row_Line) - LENGTH(REPLACE(v_Row_Line, v_Column_Delimiter));
 
 			v_Offset2   := dbms_lob.instr(p_clob, p_New_Line, v_Offset+v_Nllen);
@@ -384,7 +384,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 				else p_Column_Delimiter end;
 		end if;
 		-- probe Column Delimiter
-		v_Row_Line := dbms_lob.substr( v_clob, v_Offset - 1, 1 );
+		v_Row_Line := RTRIM(dbms_lob.substr( v_clob, v_Offset - 1, 1 ), v_Column_Delimiter);
 		v_Column_Cnt := 1 + LENGTH(v_Row_Line) - LENGTH(REPLACE(v_Row_Line, v_Column_Delimiter));
 		if v_Column_Cnt = 1 and p_Column_Delimiter IS NOT NULL then
 			p_Message := g_msg_separator;
