@@ -73,7 +73,8 @@ IS
 	g_msg_file_empty 		CONSTANT VARCHAR2(50) := 'File content is empty.';
 	g_msg_no_data_found		CONSTANT VARCHAR2(50) := 'No valid data found in import file.';
 	g_msg_line_delimiter 	CONSTANT VARCHAR2(50) := 'Line delimiter not found.';
-	g_msg_separator 		CONSTANT VARCHAR2(50) := 'Separator not found in first line.';
+	g_msg_separator_head	CONSTANT VARCHAR2(50) := 'Separator not found in first line.';
+	g_msg_separator_body	CONSTANT VARCHAR2(50) := 'Separator not found in line ';
 	g_msg_process_success 	CONSTANT VARCHAR2(100) := '%0 rows have been loaded.';
 	g_linemaxsize     		CONSTANT INTEGER 	  := 4000;
 	g_Collection_Cols_Limit CONSTANT PLS_INTEGER := 50;
@@ -163,16 +164,16 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 	)  return CLOB
 	is
 	v_clob	CLOB;
-	v_dstoff	PLS_INTEGER := 1;
-	v_srcoff	PLS_INTEGER := 1;
-	v_langctx 	PLS_INTEGER := 0;
-	v_warning 	PLS_INTEGER := 1;
-	v_blob_csid PLS_INTEGER;
+	v_dstoff	INTEGER := 1;
+	v_srcoff	INTEGER := 1;
+	v_langctx 	INTEGER := 0;
+	v_warning 	INTEGER := 1;
+	v_blob_csid NUMBER;
 	v_utf8_bom  raw(10) := hextoraw('EFBBBF');
 	v_utf16le_bom raw(10) := hextoraw('FFFE');
 	v_file_head raw(10);
 	begin
-		if dbms_lob.getlength(p_blob) > 0 then
+		if dbms_lob.getlength(p_blob) > 3 then
 			if p_blob_charset IS NOT NULL then
 				v_blob_csid := nls_charset_id(Charset_Code(p_blob_charset));
 			end if;
@@ -180,13 +181,16 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 				v_blob_csid := DBMS_LOB.DEFAULT_CSID;
 			end if;
 
-			v_file_head := UTL_RAW.SUBSTR(p_blob, 1, 3);
+			v_file_head := dbms_lob.substr(p_blob, 3, 1);
 			if UTL_RAW.COMPARE (v_utf8_bom, v_file_head) = 0 then
 				v_srcoff := 4;
 				v_blob_csid := nls_charset_id('AL32UTF8');
-			elsif UTL_RAW.COMPARE (v_utf16le_bom, v_file_head) = 0 then
-				v_srcoff := 3;
-				v_blob_csid := nls_charset_id('AL16UTF16LE');
+			else 
+				v_file_head := dbms_lob.substr(p_blob, 2, 1);
+				if UTL_RAW.COMPARE (v_utf16le_bom, v_file_head) = 0 then
+					v_srcoff := 3;
+					v_blob_csid := nls_charset_id('AL16UTF16LE');
+				end if;
 			end if;
 
 			dbms_lob.createtemporary(v_clob, true, dbms_lob.call);
@@ -279,7 +283,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 			v_Column_Cnt := 1 + LENGTH(v_Row_Line) - LENGTH(REPLACE(v_Row_Line, v_Column_Delimiter));
 
 			v_Offset2   := dbms_lob.instr(p_clob, p_New_Line, v_Offset+v_Nllen);
-			v_Row_Line2 := dbms_lob.substr(p_clob, v_Offset2 - v_Offset - v_Nllen, v_Offset+v_Nllen );
+			v_Row_Line2 := RTRIM(dbms_lob.substr(p_clob, v_Offset2 - v_Offset - v_Nllen, v_Offset+v_Nllen), v_Column_Delimiter);
 			if LENGTH(v_Row_Line2) > 0 then 
 				v_Column_Cnt2 := 1 + LENGTH(v_Row_Line2) - LENGTH(REPLACE(v_Row_Line2, v_Column_Delimiter));
 			else 
@@ -387,7 +391,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		v_Row_Line := RTRIM(dbms_lob.substr( v_clob, v_Offset - 1, 1 ), v_Column_Delimiter);
 		v_Column_Cnt := 1 + LENGTH(v_Row_Line) - LENGTH(REPLACE(v_Row_Line, v_Column_Delimiter));
 		if v_Column_Cnt = 1 and p_Column_Delimiter IS NOT NULL then
-			p_Message := g_msg_separator;
+			p_Message := g_msg_separator_head;
 			return;
 		end if;
 		-- probe optionally enclosed by
@@ -411,8 +415,8 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 								else c_rows.Column_Value end;
 				v_Line_Array := apex_string.split(p_str => v_Row_Line, p_sep => v_Column_Delimiter);
 				v_Column_Limit := LEAST(v_Line_Array.count, g_Collection_Cols_Limit);
-				if v_Column_Limit != v_Column_Cnt then 
-					p_Message := g_msg_separator;
+				if v_Column_Limit < v_Column_Cnt then 
+					p_Message := g_msg_separator_body || c_rows.Line_No;
 					return;
 				end if;
 				if apex_application.g_debug then
