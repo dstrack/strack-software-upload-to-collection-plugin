@@ -1,4 +1,4 @@
-README:
+# README:
 
 Plugin for uploading data into a APEX_COLLECTION. Then edit and save the collection data without programming pl/sql code.
 
@@ -8,7 +8,7 @@ The plugin process copies the data into new rows in the named apex collection.
 The character columns C001 - C050 of the apex collection will contain the data in the the corresponding rows and columns from the input.
 
 Now you can access and update forms and interactive grids that are based on an APEX_COLLECTION without additional PL/SQL code.
-Usage in IG:
+## Usage in IG:
 Create an IG Region based on a SQL Query :
 	select COLLECTION_NAME,
 		   SEQ_ID,
@@ -40,7 +40,7 @@ This sample application demonstrates the usage of the plugin and the view v_apex
 No pl/sql code is required to perform the DML operations.
 
 ----------
-Installation 
+## Installation 
 
 The package upload_to_collection_plugin has to be installed in the application schema. 
 execute the file upload_to_collection_plsql_code.sql and v_apex_collections.sql to install the required database objects.
