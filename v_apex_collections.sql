@@ -64,6 +64,7 @@ $END
 			EXIT WHEN c_cur%NOTFOUND;
 			PIPE ROW(v_row);
 		end loop;
+		CLOSE c_cur;
 		RETURN;
 	END pipe_rows;
 	

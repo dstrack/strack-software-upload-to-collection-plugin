@@ -92,8 +92,8 @@ IS
 
 	PROCEDURE Upload_to_Apex_Collection (
 		p_Import_From		IN VARCHAR2, -- UPLOAD or PASTE. UPLOAD will be replaced by PASTE
-		p_Column_Delimiter  IN VARCHAR2,
-		p_Enclosed_By       IN VARCHAR2,
+		p_Column_Delimiter  IN VARCHAR2 DEFAULT NULL,
+		p_Enclosed_By       IN VARCHAR2 DEFAULT '"',
 		p_Currency_Symbol	IN VARCHAR2,
 		p_First_Row			IN VARCHAR2,
 		p_File_Name			IN VARCHAR2,
@@ -304,8 +304,8 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 	
 	PROCEDURE Upload_to_Apex_Collection (
 		p_Import_From		IN VARCHAR2, -- UPLOAD or PASTE. UPLOAD will be replaced by PASTE
-		p_Column_Delimiter  IN VARCHAR2,
-		p_Enclosed_By       IN VARCHAR2,
+		p_Column_Delimiter  IN VARCHAR2 DEFAULT NULL,
+		p_Enclosed_By       IN VARCHAR2 DEFAULT '"',
 		p_Currency_Symbol	IN VARCHAR2,
 		p_First_Row			IN VARCHAR2,
 		p_File_Name			IN VARCHAR2,
@@ -325,13 +325,11 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		v_Row_Line 			VARCHAR2(32767);
 		v_Cell_Value		VARCHAR2(32767);
 		v_Seq_ID 			PLS_INTEGER := 0;
-		v_Row_Cnt 			PLS_INTEGER := 0;
 		v_Column_Cnt 		PLS_INTEGER;
 		v_Column_Limit		PLS_INTEGER;
 		v_Offset	 		PLS_INTEGER;
    		cv 					CUR_TYPE;
 	begin
-		v_Row_Cnt		:= 0;
 		dbms_lob.createtemporary(v_Clob, true, dbms_lob.call);
 		apex_collection.create_or_truncate_collection(p_collection_name=>p_Collection_Name);
 
@@ -409,7 +407,6 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		)
 		loop
 			if c_rows.Column_Value IS NOT NULL then
-				v_Row_Cnt := v_Row_Cnt + 1;
 				v_Row_Line := case when v_Enclosed_By IS NOT NULL
 								then SUBSTR(c_rows.Column_Value, 2, LENGTH(c_rows.Column_Value)-2)
 								else c_rows.Column_Value end;
@@ -420,11 +417,11 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 					return;
 				end if;
 				if apex_application.g_debug then
-					apex_debug.info('%s. Import_Row_Line : #%s#', v_Row_Cnt, v_Row_Line);
+					apex_debug.info('%s. Import_Row_Line : #%s#', c_rows.Line_No, v_Row_Line);
 				end if;
-				if v_Row_Cnt = 1 and p_First_Row = 'Y' then
+				if c_rows.Line_No = 1 and p_First_Row = 'Y' then
 					p_Column_Headers := substr(apex_string.join(v_Line_Array, ':'), 1, 4000);
-				elsif v_Row_Cnt > 1 or p_First_Row = 'N' then
+				elsif c_rows.Line_No > 1 or p_First_Row = 'N' then
 					v_Seq_ID := APEX_COLLECTION.ADD_MEMBER ( p_collection_name => p_Collection_Name );
 					for c_idx IN 1..v_Column_Limit loop
 						if p_Enclosed_By IS NOT NULL then 
