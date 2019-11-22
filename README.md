@@ -2,7 +2,7 @@
 
 Plugin for uploading data into a APEX_COLLECTION. Then edit and save the collection data without programming pl/sql code.
 
-Purpose: Upload CSV data via copy and paste or via file upload.
+**Purpose**: Upload CSV data via copy and paste or via file upload.
 The optional first line of the input (file) and the currency symbols will be removed from the input.
 The plugin process copies the data into new rows in the named apex collection. 
 The character columns C001 - C050 of the apex collection will contain the data in the the corresponding rows and columns from the input.
