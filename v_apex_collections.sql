@@ -72,7 +72,7 @@ $END
 	IS
 		v_Result NUMBER;
 	BEGIN
-		select NVL(MAX(SEQ_ID),0) INTO v_Result
+		select NVL(MAX(SEQ_ID),0) + 1 INTO v_Result
 		from APEX_COLLECTIONS where COLLECTION_NAME = p_Collection_Name;
 		RETURN v_Result;
 	END;
