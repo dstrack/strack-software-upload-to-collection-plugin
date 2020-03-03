@@ -443,6 +443,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 				end if;
 			end if;
 		end loop;
+		commit;
 		p_Rows_Cnt := v_Seq_ID;
 		p_Message  := 'OK';
 	end Upload_to_Apex_Collection;
