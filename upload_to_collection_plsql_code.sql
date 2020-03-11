@@ -331,7 +331,11 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
    		cv 					CUR_TYPE;
 	begin
 		dbms_lob.createtemporary(v_Clob, true, dbms_lob.call);
-		apex_collection.create_or_truncate_collection(p_collection_name=>p_Collection_Name);
+		begin
+		  apex_collection.create_or_truncate_collection (p_collection_name=>p_Collection_Name);
+		exception
+		  when dup_val_on_index then null;
+		end;
 
 		v_Enclosed_By := p_Enclosed_By;
 
