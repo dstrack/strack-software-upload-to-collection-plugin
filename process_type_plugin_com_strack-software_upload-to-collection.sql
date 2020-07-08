@@ -6,17 +6,17 @@ whenever sqlerror exit sql.sqlcode rollback
 -- ORACLE Application Express (APEX) export file
 --
 -- You should run the script connected to SQL*Plus as the Oracle user
--- APEX_180200 or as the owner (parsing schema) of the application.
+-- APEX_190100 or as the owner (parsing schema) of the application.
 --
 -- NOTE: Calls to apex_application_install override the defaults below.
 --
 --------------------------------------------------------------------------------
 begin
 wwv_flow_api.import_begin (
- p_version_yyyy_mm_dd=>'2018.05.24'
-,p_release=>'18.2.0.00.12'
-,p_default_workspace_id=>1622491426059007
-,p_default_application_id=>2000
+ p_version_yyyy_mm_dd=>'2019.03.31'
+,p_release=>'19.1.0.00.15'
+,p_default_workspace_id=>1293931922049787
+,p_default_application_id=>101
 ,p_default_owner=>'STRACK_DEV'
 );
 end;
@@ -24,7 +24,7 @@ end;
 prompt --application/shared_components/plugins/process_type/com_strack_software_upload_to_collection
 begin
 wwv_flow_api.create_plugin(
- p_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(313928966553718701)
 ,p_plugin_type=>'PROCESS TYPE'
 ,p_name=>'COM.STRACK-SOFTWARE.UPLOAD-TO-COLLECTION'
 ,p_display_name=>'Upload to Apex Collection'
@@ -34,9 +34,9 @@ wwv_flow_api.create_plugin(
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'Plugin for converting uploaded data to apex collection.',
+'Plugin for converting uploaded data to an apex collection.',
 '',
-'To use this plugin navigate to a "XX - Data Load Source" page in your application.',
+'To use this plugin, navigate to a "XX - Data Load Source" page in your application.',
 'Create a Page process.',
 'Choose ''Process type'' "Plug-ins".',
 'Select Plug-in "Convert Upload to Apex Collection".',
@@ -46,7 +46,7 @@ wwv_flow_api.create_plugin(
 'At ''Process Condition'' set ''When Button Pressed'' to "NEXT".',
 '',
 'Now edit the settings of the plugin instance.',
-'Set the mandantory attributes ''Import From Item'', ''Separator Item'', ''File Name Item'' and ''Character Set Item''',
+'Set the mandatory attributes ''Import From Item'', ''Separator Item'', ''File Name Item'' and ''Character Set Item''',
 'to the same values that are used in the "Parse Uploaded Data" process.',
 '',
 'Set the optional attribute ''Show Success Message''. Set this attribute to ''Yes'' when a success message should be displayed.',
@@ -55,24 +55,25 @@ wwv_flow_api.create_plugin(
 '',
 'Set the optional attribute ''Rows Loaded Item'' Enter the page item to receive the count of loaded rows.',
 'You can type in the name or pick from the list of available items.',
-'When the Plugin is processed, rows that do not contain the proper formating will be removed',
-'from the input data and will by added to the bad rows item.',
+'When the Plugin is processed, rows that do not contain the proper formatting will be removed',
+'from the input data and will be added to the bad rows item.',
 '',
 'Set the attribute ''Collection Name''. Enter the name of the collection that will be created.',
 '',
-'The process is skipped when not data can be processced and one of the following success messages is returned:',
-'''File name is empty.'', ''Line delimiter not found.'', ''Separator not found in first line.''.',
-'the messages can be translated via enties in the Dynamic Translations Lists'))
+'The process is skipped when no data can be processed and one of the following success messages is returned:',
+'''Filename is empty.'', ''Line delimiter not found.'', ''Separator not found in the first line.''.',
+'the messages can be translated via entries in the Dynamic Translations Lists'))
 ,p_version_identifier=>'1.0'
+,p_about_url=>'https://github.com/dstrack/strack-software-upload-to-collection-plugin.git'
 ,p_plugin_comment=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'The package upload_to_collection_plugin has to be installed in the application schema. ',
-'execute the file filter_uploaded_data_plsql_code.sql to install the required database objects.',
-'You can add the file to the installation script of you application.',
+'execute the file upload_to_collection_plsql_code.sql to install the required database objects.',
+'You can add the file to the installation script of your application.',
 ''))
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144003509024323102)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(313946477670133888)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>1
 ,p_display_sequence=>10
@@ -84,8 +85,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Enter the page item to hold the Import From option chosen by the end user. You can type in the name or pick from the list of available items.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144013470531601746)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(313956439177412532)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>2
 ,p_display_sequence=>20
@@ -97,8 +98,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Enter the page item to hold the Seperator text entered by the end user. You can type in the name or pick from the list of available items.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144013840197606680)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(313956808843417466)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>3
 ,p_display_sequence=>30
@@ -110,8 +111,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Enter the page item to hold the File Name value entered by the end user. You can type in the name or pick from the list of available items.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144014084561614094)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(313957053207424880)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>4
 ,p_display_sequence=>40
@@ -123,8 +124,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Enter the page item to hold the File Character Set selected by the end user. You can type in the name or pick from the list of available items.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144014416206646892)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(313957384852457678)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>5
 ,p_display_sequence=>50
@@ -135,8 +136,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_examples=>'PXX_ROWS_LOADED'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144133923396850631)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(314076892042661417)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>6
 ,p_display_sequence=>60
@@ -151,8 +152,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Define the maximum number of rows to be returned into the bad rows Item.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(144433545698556872)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(314376514344367658)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>7
 ,p_display_sequence=>70
@@ -166,8 +167,8 @@ wwv_flow_api.create_plugin_attribute(
 'The Message is of the form "Filtered uploaded data. Found %0 good rows and %1 bad rows." and is displayed, when a page branch with the option ''include process success message '' is followed.'))
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(63834062984903623)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(233777031630714409)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>8
 ,p_display_sequence=>22
@@ -179,8 +180,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Enter the page item to hold the Optionally Enclosed By text entered by the end user. You can type in the name or pick from the list of available items.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(63850876044720047)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(233793844690530833)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>9
 ,p_display_sequence=>26
@@ -192,8 +193,8 @@ wwv_flow_api.create_plugin_attribute(
 ,p_help_text=>'Enter the page item to hold the First Row has Column Names checkbox value entered by the end user. You can type in the name or pick from the list of available items.'
 );
 wwv_flow_api.create_plugin_attribute(
- p_id=>wwv_flow_api.id(93152843532399631)
-,p_plugin_id=>wwv_flow_api.id(143985997907907915)
+ p_id=>wwv_flow_api.id(263095812178210417)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>10
 ,p_display_sequence=>24
@@ -202,6 +203,29 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_is_translatable=>false
 ,p_help_text=>'Enter the page item to hold the Currency Symbol entered by the end user. You can type in the name or pick from the list of available items.'
+);
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(170088203538171859)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
+,p_attribute_scope=>'COMPONENT'
+,p_attribute_sequence=>11
+,p_display_sequence=>110
+,p_prompt=>'Column Headers Item'
+,p_attribute_type=>'PAGE ITEM'
+,p_is_required=>false
+,p_is_translatable=>false
+);
+wwv_flow_api.create_plugin_attribute(
+ p_id=>wwv_flow_api.id(172204865276864324)
+,p_plugin_id=>wwv_flow_api.id(313928966553718701)
+,p_attribute_scope=>'COMPONENT'
+,p_attribute_sequence=>12
+,p_display_sequence=>120
+,p_prompt=>'Use Apex Data Parser'
+,p_attribute_type=>'CHECKBOX'
+,p_is_required=>false
+,p_default_value=>'Y'
+,p_is_translatable=>false
 );
 end;
 /

@@ -47,6 +47,8 @@ When the Region is created change some attributes:
 	Prevent Lost Updates : No 
 	Lock Row : No 
 	Return Primary Key(s) after Insert : No 
+4. Because the Primary Key(s) are not returned after Insert,
+	the page has to be reloaded after processing of the SAVE button/request.
 
 This sample application demonstrates the usage of the plugin and the view v_apex_collections in an updatable interactive grid.
 No pl/sql code is required to perform the DML operations.
@@ -58,23 +60,38 @@ No pl/sql code is required to perform the DML operations.
 	attribute_02 : Separator Item
 	attribute_03 : File Name Item
 	attribute_04 : Character Set Item
-	attribute_05 : Rows Item
+	attribute_05 : Rows Loaded Item
 	attribute_06 : Collection Name
 	attribute_07 : Show Success Message
-
+	attribute_08 : Enclosed By Item
+	attribute_09 : FIrst Row Item
+	attribute_10 : Currency Symbol Item
+	attribute_11 : Column Headers Item
+	attribute_12 : Use Apex Data Parser
 
 */
 
+declare 
+	v_has_data_parser VARCHAR2(128);
+	v_stat VARCHAR2(32767);
+begin 
+	SELECT case when TO_NUMBER(SUBSTR(VERSION_NO, 1, INSTR(VERSION_NO, '.') - 1)) >= 18 
+		then 'TRUE' else 'FALSE' end 
+	INTO v_has_data_parser
+	FROM APEX_RELEASE;
+	
+	v_stat := '
 CREATE OR REPLACE PACKAGE upload_to_collection_plugin
 AUTHID CURRENT_USER
 IS
-	TYPE cur_type IS REF CURSOR;
-	g_msg_file_name_empty 	CONSTANT VARCHAR2(50) := 'File name is empty.';
-	g_msg_file_empty 		CONSTANT VARCHAR2(50) := 'File content is empty.';
-	g_msg_no_data_found		CONSTANT VARCHAR2(50) := 'No valid data found in import file.';
-	g_msg_line_delimiter 	CONSTANT VARCHAR2(50) := 'Line delimiter not found.';
-	g_msg_separator_head	CONSTANT VARCHAR2(50) := 'Separator not found in first line.';
-	g_msg_separator_body	CONSTANT VARCHAR2(50) := 'Separator not found in line ';
+	g_has_data_parser 		CONSTANT BOOLEAN := ' || v_has_data_parser || q'[;
+	g_msg_file_name_empty 	CONSTANT VARCHAR2(100) := 'Filename is empty.';
+	g_msg_file_empty 		CONSTANT VARCHAR2(100) := 'File content is empty.';
+	g_msg_no_data_parser	CONSTANT VARCHAR2(100) := 'The APEX_DATA_PARSER is not available is this APEX Version.';
+	g_msg_no_data_found		CONSTANT VARCHAR2(100) := 'No valid data found in import file.';
+	g_msg_line_delimiter 	CONSTANT VARCHAR2(100) := 'Line delimiter not found.';
+	g_msg_separator_head	CONSTANT VARCHAR2(100) := 'Separator not found in the first line.';
+	g_msg_separator_body	CONSTANT VARCHAR2(100) := 'Separator not found in line ';
 	g_msg_process_success 	CONSTANT VARCHAR2(100) := '%0 rows have been loaded.';
 	g_linemaxsize     		CONSTANT INTEGER 	  := 4000;
 	g_Collection_Cols_Limit CONSTANT PLS_INTEGER := 50;
@@ -100,6 +117,7 @@ IS
 		p_File_Table_Name	IN VARCHAR2,
 		p_Character_Set		IN VARCHAR2,
 		p_Collection_Name   IN VARCHAR2,
+		p_Use_Apex_Data_Parser IN VARCHAR2 DEFAULT 'N',
 		p_Column_Headers	OUT VARCHAR2,
 		p_Rows_Cnt			OUT INTEGER,
 		p_Message			OUT VARCHAR2
@@ -110,14 +128,26 @@ IS
 		p_plugin  in apex_plugin.t_plugin )
 	RETURN apex_plugin.t_process_exec_result;
 
+	FUNCTION Access_Collection_Query(
+		p_Query IN CLOB,
+		p_Collection_Name IN VARCHAR2,
+		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2;
+
+	FUNCTION Access_Collection_Query2(
+		p_Query IN CLOB,
+		p_Collection_Name IN VARCHAR2,
+		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2;
+
 END upload_to_collection_plugin;
+]';
+	EXECUTE IMMEDIATE v_Stat;
+end;
 /
-show errors
 
 
 CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
-
-
 	function Charset_Code (p_Charset_Name VARCHAR2) return varchar2
 	is
 	begin
@@ -156,7 +186,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 			when 'us-ascii' then 'US7ASCII' -- 'US-ASCII'
 			else p_Charset_Name
 		end;
-	end;
+	end Charset_Code;
 
 	FUNCTION Blob_to_Clob(
 		p_blob IN BLOB,
@@ -312,6 +342,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		p_File_Table_Name	IN VARCHAR2,
 		p_Character_Set		IN VARCHAR2,
 		p_Collection_Name   IN VARCHAR2,
+		p_Use_Apex_Data_Parser IN VARCHAR2 DEFAULT 'N',
 		p_Column_Headers	OUT VARCHAR2,
 		p_Rows_Cnt			OUT INTEGER,
 		p_Message			OUT VARCHAR2
@@ -324,12 +355,53 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		v_Enclosed_By    	VARCHAR2(10);
 		v_Row_Line 			VARCHAR2(32767);
 		v_Cell_Value		VARCHAR2(32767);
+		v_Character_Set		VARCHAR2(100);
 		v_Seq_ID 			PLS_INTEGER := 0;
 		v_Column_Cnt 		PLS_INTEGER;
 		v_Column_Limit		PLS_INTEGER;
 		v_Offset	 		PLS_INTEGER;
-   		cv 					CUR_TYPE;
+   		cv 					SYS_REFCURSOR;
+   		v_query				VARCHAR2(32767);
+   		v_Squote 			VARCHAR2(10) := CHR(39); 	-- single quote
+   		v_Enclosed_By		VARCHAR(10);
 	begin
+$IF upload_to_collection_plugin.g_has_data_parser $THEN 
+		if p_Use_Apex_Data_Parser = 'Y' and p_Import_From = 'UPLOAD' then 
+			for ind in 1..50 loop
+				v_query := v_query 
+				|| case when ind > 1 then ', '||chr(10)||chr(9) else 'SELECT'||chr(9) end
+				|| 'COL' || TO_CHAR(ind, 'FM099');
+			end loop;
+			v_Character_Set := Charset_Code(p_Character_Set);
+			v_Enclosed_By   := v_Squote||REPLACE(p_Enclosed_By, v_Squote, v_Squote||v_Squote)||v_Squote;
+			v_query := v_query || chr(10) || 'FROM ' || DBMS_ASSERT.ENQUOTE_NAME(p_File_Table_Name) 
+			|| ' T, TABLE(apex_data_parser.parse(
+				p_content => T.Blob_Content, 
+				p_file_name => T.Name, 
+				p_detect_data_types => ' || dbms_assert.enquote_literal('N') || ', ' || '
+				p_csv_col_delimiter => ' || dbms_assert.enquote_literal(p_Column_Delimiter) || ', ' || '
+				p_csv_enclosed => ' || v_Enclosed_By || ', ' || '
+				p_file_charset => ' || dbms_assert.enquote_literal(v_Character_Set) || ')) S' || chr(10) 
+			|| 'WHERE T.Name = ' || dbms_assert.enquote_literal(p_File_Name);
+			if apex_application.g_debug then
+				apex_debug.info('v_query : %s', v_query);
+			end if;
+			
+			APEX_COLLECTION.CREATE_COLLECTION_FROM_QUERY (
+				p_collection_name => p_Collection_Name, 
+				p_query => v_query,
+				p_truncate_if_exists => 'YES'
+			);
+			p_Rows_Cnt := APEX_COLLECTION.COLLECTION_MEMBER_COUNT( p_collection_name );
+			p_Message  := 'OK';
+			return;
+		end if;
+$ELSE
+		if p_Use_Apex_Data_Parser = 'Y' and p_Import_From = 'UPLOAD' then 
+			p_Message := g_msg_no_data_parser;
+			return;
+		end if;
+$END 
 		dbms_lob.createtemporary(v_Clob, true, dbms_lob.call);
 		begin
 		  apex_collection.create_or_truncate_collection (p_collection_name=>p_Collection_Name);
@@ -458,26 +530,27 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 	RETURN apex_plugin.t_process_exec_result
 	IS
 		v_exec_result apex_plugin.t_process_exec_result;
-		v_Import_From		VARCHAR2(50);
-		v_Import_From_Item	VARCHAR2(50);
-		v_Column_Delimiter	VARCHAR2(50);
-		v_File_Name			VARCHAR2(1000);
+		v_Import_From		VARCHAR2(32767);
+		v_Import_From_Item	VARCHAR2(32767);
+		v_Column_Delimiter	VARCHAR2(32767);
+		v_File_Name			VARCHAR2(32767);
 		v_File_Table_Name	APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_01%TYPE;
 		v_File_Name_Item	APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_03%TYPE;
-		v_Character_Set		VARCHAR2(200);
+		v_Character_Set		VARCHAR2(32767);
 		v_Rows_Item			APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_05%TYPE;
 		v_Collection_Name	APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_06%TYPE;
 		v_Rows_Cnt			PLS_INTEGER;
 		v_Show_Message		APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_07%TYPE;
 		v_Enclosed_By_Item	APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_08%TYPE;
-		v_Enclosed_By   	VARCHAR2(50);
+		v_Enclosed_By   	VARCHAR2(32767);
 		v_First_Row_Item	APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_09%TYPE;
-		v_First_Row   		VARCHAR2(50);
-		v_Currency_Symbol	VARCHAR2(50);
+		v_First_Row   		VARCHAR2(32767);
+		v_Currency_Symbol	VARCHAR2(32767);
 		v_Currency_Item		APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_10%TYPE;
-		v_Column_Headers	VARCHAR2(4000);
+		v_Column_Headers	VARCHAR2(32767);
 		v_Col_Headers_Item	APEX_APPLICATION_PAGE_ITEMS.ATTRIBUTE_11%TYPE;
-		v_Message			VARCHAR2(200);
+		v_Use_Apex_Data_Parser VARCHAR2(32767);
+		v_Message			VARCHAR2(32767);
 	BEGIN
 		if apex_application.g_debug then
 			apex_plugin_util.debug_process (
@@ -501,7 +574,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		v_Currency_Item   := p_process.attribute_10;
 		v_Currency_Symbol := APEX_UTIL.GET_SESSION_STATE(v_Currency_Item);
 		v_Col_Headers_Item := p_process.attribute_11;
-		
+		v_Use_Apex_Data_Parser := p_process.attribute_12;
 		if v_File_Name_Item IS NOT NULL then
 			-- determinate file source : WWV_FLOW_FILES or APEX_APPLICATION_TEMP_FILES
 			SELECT ATTRIBUTE_01
@@ -528,6 +601,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 			apex_debug.info('Rows_Item       : %s', v_Rows_Item);
 			apex_debug.info('Col_Header_Item : %s', v_Col_Headers_Item);
 			apex_debug.info('Collection_Name : %s', v_Collection_Name);
+			apex_debug.info('Use_Data_Parser : %s', v_Use_Apex_Data_Parser);
 		end if;
 
 		upload_to_collection_plugin.Upload_to_Apex_Collection (
@@ -540,6 +614,7 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 			p_File_Table_Name 	=> v_File_Table_Name,
 			p_Character_Set 	=> v_Character_Set,
 			p_Collection_Name 	=> v_Collection_Name,
+			p_Use_Apex_Data_Parser => v_Use_Apex_Data_Parser,
 			p_Column_Headers	=> v_Column_Headers,
 			p_Rows_Cnt 			=> v_Rows_Cnt,
 			p_Message			=> v_Message
@@ -577,7 +652,86 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		end if;
 		RETURN v_exec_result;
 	END plugin_Upload_to_Collection;
+
+	FUNCTION Access_Collection_Query(
+		p_Query IN CLOB,
+		p_Collection_Name IN VARCHAR2,
+		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2
+	is
+		v_cur INTEGER;
+		v_col_cnt INTEGER;
+		v_rec_tab DBMS_SQL.DESC_TAB2;
+		v_result VARCHAR2(32767);
+	begin
+		v_cur := dbms_sql.open_cursor;
+		dbms_sql.parse(v_cur, p_Query, DBMS_SQL.NATIVE);
+		dbms_sql.describe_columns2(v_cur, v_col_cnt, v_rec_tab);
+		dbms_sql.close_cursor(v_cur);
+		if v_col_cnt > 50 then 
+			v_col_cnt := 50;
+		end if;
+		for ind in 1..v_col_cnt loop
+			v_result := v_result 
+			|| case when ind > 1 then ', '||chr(10)||chr(9) else 'SELECT'||chr(9) end
+			|| 'C' || TO_CHAR(ind, 'FM099') 
+			|| case when UPPER(v_rec_tab(ind).col_name) != 'NULL' then
+				' ' || dbms_assert.enquote_name(v_rec_tab(ind).col_name, FALSE)
+			end;
+		end loop;
+		return v_result || chr(10) 
+		|| 'FROM ' || dbms_assert.enquote_name(p_From_View_Name, FALSE) || chr(10) 
+		|| 'WHERE COLLECTION_NAME = ' || dbms_assert.enquote_literal(p_Collection_Name);
+	end Access_Collection_Query;
+
+	FUNCTION Access_Collection_Query2(
+		p_Query IN CLOB,
+		p_Collection_Name IN VARCHAR2,
+		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2
+	is
+		v_cur INTEGER;
+		v_col_cnt INTEGER;
+		v_rec_tab DBMS_SQL.DESC_TAB2;
+		v_result VARCHAR2(32767);
+	begin
+		v_cur := dbms_sql.open_cursor;
+		dbms_sql.parse(v_cur, p_Query, DBMS_SQL.NATIVE);
+		dbms_sql.describe_columns2(v_cur, v_col_cnt, v_rec_tab);
+		dbms_sql.close_cursor(v_cur);
+		if v_col_cnt > 60 then 
+			v_col_cnt := 60;
+		end if;
+		for ind in 1..v_col_cnt loop
+			v_result := v_result 
+			|| case when ind > 1 then ', '||chr(10)||chr(9) else 'SELECT'||chr(9) end
+			|| case when ind > 10 then 'C' || TO_CHAR(ind-10, 'FM099')
+					when ind > 5 then 'D' || TO_CHAR(ind-5, 'FM09')
+					else 'N' || TO_CHAR(ind, 'FM09') end 
+			|| case when UPPER(v_rec_tab(ind).col_name) != 'NULL' then
+				' ' || dbms_assert.enquote_name(v_rec_tab(ind).col_name, FALSE)
+			end;
+		end loop;
+		return v_result || chr(10) 
+		|| 'FROM ' || dbms_assert.enquote_name(p_From_View_Name, FALSE) || chr(10) 
+		|| 'WHERE COLLECTION_NAME = ' || dbms_assert.enquote_literal(p_Collection_Name);
+	end Access_Collection_Query2;
 END upload_to_collection_plugin;
 /
 show errors
 
+/*
+-- usage:
+SELECT Access_Apex_Collections.Access_Collection_Query('SELECT * FROM SYS.ALL_TABLES', 'ALL_TABLES') X FROM DUAL;
+SELECT Access_Apex_Collections.Access_Collection_Query2(
+	p_Query=>'
+		SELECT OBJECT_ID,DATA_OBJECT_ID,NAMESPACE,CREATED_APPID,CREATED_VSNID,
+			LAST_DDL_TIME,TIMESTAMP,NULL,NULL,NULL,
+			OWNER,OBJECT_NAME,SUBOBJECT_NAME,OBJECT_TYPE,STATUS,TEMPORARY,GENERATED,SECONDARY
+		FROM SYS.ALL_OBJECTS', 
+	p_Collection_Name=>'ALL_OBJECTS',
+	p_View_Name=>'V_APEX_COLLECTIONS'
+) X FROM DUAL;
+
+
+*/
