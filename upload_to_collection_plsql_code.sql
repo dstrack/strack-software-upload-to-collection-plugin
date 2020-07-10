@@ -47,9 +47,20 @@ When the Region is created change some attributes:
 	Prevent Lost Updates : No 
 	Lock Row : No 
 	Return Primary Key(s) after Insert : No 
-4. Because the Primary Key(s) are not returned after Insert,
-	the page has to be reloaded after processing of the SAVE button/request.
+4. If you want to allow inserting of new rows in the grid, then because the Primary Key(s) are not returned after Insert,
+	the page has to be submitted and reloaded after processing of the SAVE button/request.
+	In the following code can be used in the Init Javascript field for the interactive grid.
 
+function(config) {
+    config.initActions = function( actions ) {
+        actions.lookup("save").action = function(event, focusElement) {
+			apex.page.submit( "SAVE" );
+		};
+        actions.update("save");
+    }
+    return config;
+}	
+	
 This sample application demonstrates the usage of the plugin and the view v_apex_collections in an updatable interactive grid.
 No pl/sql code is required to perform the DML operations.
 -------------------------------------------------------------------------
