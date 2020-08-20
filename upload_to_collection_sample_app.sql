@@ -27,7 +27,7 @@ prompt APPLICATION 101 - Upload to Collection
 -- Application Export:
 --   Application:     101
 --   Name:            Upload to Collection
---   Date and Time:   19:23 Wednesday July 8, 2020
+--   Date and Time:   21:33 Wednesday August 19, 2020
 --   Exported By:     DIRK
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -37,7 +37,7 @@ prompt APPLICATION 101 - Upload to Collection
 
 -- Application Statistics:
 --   Pages:                      6
---     Items:                   13
+--     Items:                   15
 --     Computations:             1
 --     Validations:              2
 --     Processes:                9
@@ -117,7 +117,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Upload to Collection'
 ,p_last_updated_by=>'DIRK'
-,p_last_upd_yyyymmddhh24miss=>'20200708192010'
+,p_last_upd_yyyymmddhh24miss=>'20200819212808'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -10326,7 +10326,7 @@ wwv_flow_api.create_page(
 '',
 '<p>Click the <strong>Reset</strong> button to reset the interactive report back to the default settings.</p>'))
 ,p_last_updated_by=>'DIRK'
-,p_last_upd_yyyymmddhh24miss=>'20200708115602'
+,p_last_upd_yyyymmddhh24miss=>'20200819193606'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(169800423726802703)
@@ -12083,6 +12083,7 @@ wwv_flow_api.create_interactive_grid(
 ,p_define_chart_view=>false
 ,p_enable_download=>false
 ,p_download_formats=>null
+,p_enable_mail_download=>true
 ,p_fixed_header=>'PAGE'
 ,p_show_icon_view=>false
 ,p_show_detail_view=>false
@@ -12591,6 +12592,34 @@ wwv_flow_api.create_page_button(
 ,p_warn_on_unsaved_changes=>null
 ,p_grid_new_grid=>false
 );
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(154708380700839547)
+,p_name=>'P1_COLUMN_HEADERS'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_api.id(169800423726802703)
+,p_prompt=>'Column Header'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_field_template=>wwv_flow_api.id(169759619006802580)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'N'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(176308639479923402)
+,p_name=>'P1_ROWS_LOADED'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_api.id(169800423726802703)
+,p_prompt=>'Rows Loaded'
+,p_display_as=>'NATIVE_DISPLAY_ONLY'
+,p_begin_on_new_line=>'N'
+,p_colspan=>3
+,p_field_template=>wwv_flow_api.id(169759619006802580)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'N'
+,p_attribute_02=>'VALUE'
+,p_attribute_04=>'Y'
+);
 wwv_flow_api.create_page_da_event(
  p_id=>wwv_flow_api.id(168858190275498805)
 ,p_name=>'UPLOAD_DATA - Dialog Closed'
@@ -12601,15 +12630,47 @@ wwv_flow_api.create_page_da_event(
 ,p_bind_event_type=>'apexafterclosedialog'
 );
 wwv_flow_api.create_page_da_action(
- p_id=>wwv_flow_api.id(168858292015498806)
+ p_id=>wwv_flow_api.id(154708660361839550)
 ,p_event_id=>wwv_flow_api.id(168858190275498805)
 ,p_event_result=>'TRUE'
 ,p_action_sequence=>10
 ,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_SET_VALUE'
+,p_affected_elements_type=>'ITEM'
+,p_affected_elements=>'P1_COLUMN_HEADERS'
+,p_attribute_01=>'DIALOG_RETURN_ITEM'
+,p_attribute_09=>'N'
+,p_attribute_10=>'P44_COLUMN_HEADERS'
+,p_stop_execution_on_error=>'Y'
+,p_wait_for_result=>'Y'
+);
+wwv_flow_api.create_page_da_action(
+ p_id=>wwv_flow_api.id(176308599092923401)
+,p_event_id=>wwv_flow_api.id(168858190275498805)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_SET_VALUE'
+,p_affected_elements_type=>'ITEM'
+,p_affected_elements=>'P1_ROWS_LOADED'
+,p_attribute_01=>'DIALOG_RETURN_ITEM'
+,p_attribute_09=>'N'
+,p_attribute_10=>'P44_ROWS_LOADED'
+,p_stop_execution_on_error=>'Y'
+,p_wait_for_result=>'Y'
+);
+end;
+/
+begin
+wwv_flow_api.create_page_da_action(
+ p_id=>wwv_flow_api.id(168858292015498806)
+,p_event_id=>wwv_flow_api.id(168858190275498805)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
 ,p_action=>'NATIVE_REFRESH'
 ,p_affected_elements_type=>'REGION'
 ,p_affected_region_id=>wwv_flow_api.id(169800423726802703)
-,p_stop_execution_on_error=>'Y'
 );
 wwv_flow_api.create_page_da_event(
  p_id=>wwv_flow_api.id(168858527561498809)
@@ -12627,7 +12688,12 @@ wwv_flow_api.create_page_da_action(
 ,p_action_sequence=>10
 ,p_execute_on_page_init=>'N'
 ,p_action=>'NATIVE_EXECUTE_PLSQL_CODE'
-,p_attribute_01=>'APEX_COLLECTION.CREATE_OR_TRUNCATE_COLLECTION( p_collection_name => ''IMPORTED_DATA'');'
+,p_attribute_01=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'APEX_COLLECTION.CREATE_OR_TRUNCATE_COLLECTION( p_collection_name => ''IMPORTED_DATA'');',
+':P1_COLUMN_HEADERS := NULL;',
+':P1_ROWS_LOADED := NULL;'))
+,p_attribute_03=>'P1_COLUMN_HEADERS, P1_ROWS_LOADED'
+,p_attribute_04=>'N'
 ,p_stop_execution_on_error=>'Y'
 ,p_wait_for_result=>'Y'
 );
@@ -12676,7 +12742,7 @@ wwv_flow_api.create_page(
 '}'))
 ,p_page_template_options=>'#DEFAULT#'
 ,p_last_updated_by=>'DIRK'
-,p_last_upd_yyyymmddhh24miss=>'20200707214710'
+,p_last_upd_yyyymmddhh24miss=>'20200819171452'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(1275692572041639142)
@@ -13085,7 +13151,7 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_CLOSE_WINDOW'
 ,p_process_name=>'Close Dialog'
-,p_attribute_01=>'P44_ROWS_LOADED'
+,p_attribute_01=>'P44_ROWS_LOADED,P44_COLUMN_HEADERS'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>':P44_ROWS_LOADED > 0'
 ,p_process_when_type=>'PLSQL_EXPRESSION'
@@ -13515,9 +13581,20 @@ wwv_flow_api.create_install_script(
 '	Prevent Lost Updates : No ',
 '	Lock Row : No ',
 '	Return Primary Key(s) after Insert : No ',
-'4. Because the Primary Key(s) are not returned after Insert,',
-'	the page has to be reloaded after processing of the SAVE button/request.',
+'4. If you want to allow inserting of new rows in the grid, then because the Primary Key(s) are not returned after Insert,',
+'	the page has to be submitted and reloaded after processing of the SAVE button/request.',
+'	In the following code can be used in the Init Javascript field for the interactive grid.',
 '',
+'function(config) {',
+'    config.initActions = function( actions ) {',
+'        actions.lookup("save").action = function(event, focusElement) {',
+'			apex.page.submit( "SAVE" );',
+'		};',
+'        actions.update("save");',
+'    }',
+'    return config;',
+'}	',
+'	',
 'This sample application demonstrates the usage of the plugin and the view v_apex_collections in an updatable interactive grid.',
 'No pl/sql code is required to perform the DML operations.',
 '-------------------------------------------------------------------------',
@@ -13830,8 +13907,9 @@ wwv_flow_api.create_install_script(
 '		v_Offset	 		PLS_INTEGER;',
 '   		cv 					SYS_REFCURSOR;',
 '   		v_query				VARCHAR2(32767);',
-'   		v_Squote 			VARCHAR2(10) := CHR(39); 	-- single quote',
-'   		v_Enclosed_By		VARCHAR(10);',
+'   		v_Squote 			CONSTANT VARCHAR2(10) := CHR(39); 	-- single quote',
+'   		v_Prof_Collection_Name VARCHAR2(100) := ''FILE_PROFILE'';',
+'   		v_Skip_Rows 		NUMBER;',
 '	begin',
 '$IF upload_to_collection_plugin.g_has_data_parser $THEN ',
 '		if p_Use_Apex_Data_Parser = ''Y'' and p_Import_From = ''UPLOAD'' then ',
@@ -13842,6 +13920,7 @@ wwv_flow_api.create_install_script(
 '			end loop;',
 '			v_Character_Set := Charset_Code(p_Character_Set);',
 '			v_Enclosed_By   := v_Squote||REPLACE(p_Enclosed_By, v_Squote, v_Squote||v_Squote)||v_Squote;',
+'			v_Skip_Rows 	:= case when p_First_Row = ''Y'' then 1 else 0 end;',
 '			v_query := v_query || chr(10) || ''FROM '' || DBMS_ASSERT.ENQUOTE_NAME(p_File_Table_Name) ',
 '			|| '' T, TABLE(apex_data_parser.parse(',
 '				p_content => T.Blob_Content, ',
@@ -13849,7 +13928,9 @@ wwv_flow_api.create_install_script(
 '				p_detect_data_types => '' || dbms_assert.enquote_literal(''N'') || '', '' || ''',
 '				p_csv_col_delimiter => '' || dbms_assert.enquote_literal(p_Column_Delimiter) || '', '' || ''',
 '				p_csv_enclosed => '' || v_Enclosed_By || '', '' || ''',
-'				p_file_charset => '' || dbms_assert.enquote_literal(v_Character_Set) || '')) S'' || chr(10) ',
+'				p_skip_rows => '' || to_char(v_Skip_Rows)  || '', '' || ''',
+'				p_file_charset => '' || dbms_assert.enquote_literal(v_Character_Set) || '', '' || ''',
+'				p_store_profile_to_collection => '' || dbms_assert.enquote_literal(v_Prof_Collection_Name) || '')) S'' || chr(10) ',
 '			|| ''WHERE T.Name = '' || dbms_assert.enquote_literal(p_File_Name);',
 '			if apex_application.g_debug then',
 '				apex_debug.info(''v_query : %s'', v_query);',
@@ -13861,6 +13942,10 @@ wwv_flow_api.create_install_script(
 '				p_truncate_if_exists => ''YES''',
 '			);',
 '			p_Rows_Cnt := APEX_COLLECTION.COLLECTION_MEMBER_COUNT( p_collection_name );',
+'			SELECT LISTAGG(COLUMN_NAME, '':'') WITHIN GROUP (ORDER BY COLUMN_POSITION) COLS',
+'			INTO p_Column_Headers',
+'			FROM APEX_COLLECTIONS S, (apex_data_parser.get_columns(S.clob001)) T',
+'			WHERE S.COLLECTION_NAME = v_Prof_Collection_Name;',
 '			p_Message  := ''OK'';',
 '			return;',
 '		end if;',
@@ -14281,6 +14366,7 @@ wwv_flow_api.create_install_script(
 '			EXIT WHEN c_cur%NOTFOUND;',
 '			PIPE ROW(v_row);',
 '		end loop;',
+'		CLOSE c_cur;',
 '		RETURN;',
 '	END pipe_rows;',
 '	',
@@ -14288,7 +14374,7 @@ wwv_flow_api.create_install_script(
 '	IS',
 '		v_Result NUMBER;',
 '	BEGIN',
-'		select NVL(MAX(SEQ_ID),0) INTO v_Result',
+'		select NVL(MAX(SEQ_ID),0) + 1 INTO v_Result',
 '		from APEX_COLLECTIONS where COLLECTION_NAME = p_Collection_Name;',
 '		RETURN v_Result;',
 '	END;',

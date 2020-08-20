@@ -373,8 +373,9 @@ CREATE OR REPLACE PACKAGE BODY upload_to_collection_plugin IS
 		v_Offset	 		PLS_INTEGER;
    		cv 					SYS_REFCURSOR;
    		v_query				VARCHAR2(32767);
-   		v_Squote 			VARCHAR2(10) := CHR(39); 	-- single quote
-   		v_Enclosed_By		VARCHAR(10);
+   		v_Squote 			CONSTANT VARCHAR2(10) := CHR(39); 	-- single quote
+   		v_Prof_Collection_Name VARCHAR2(100) := 'FILE_PROFILE';
+   		v_Skip_Rows 		NUMBER;
 	begin
 $IF upload_to_collection_plugin.g_has_data_parser $THEN 
 		if p_Use_Apex_Data_Parser = 'Y' and p_Import_From = 'UPLOAD' then 
@@ -385,6 +386,7 @@ $IF upload_to_collection_plugin.g_has_data_parser $THEN
 			end loop;
 			v_Character_Set := Charset_Code(p_Character_Set);
 			v_Enclosed_By   := v_Squote||REPLACE(p_Enclosed_By, v_Squote, v_Squote||v_Squote)||v_Squote;
+			v_Skip_Rows 	:= case when p_First_Row = 'Y' then 1 else 0 end;
 			v_query := v_query || chr(10) || 'FROM ' || DBMS_ASSERT.ENQUOTE_NAME(p_File_Table_Name) 
 			|| ' T, TABLE(apex_data_parser.parse(
 				p_content => T.Blob_Content, 
@@ -392,7 +394,9 @@ $IF upload_to_collection_plugin.g_has_data_parser $THEN
 				p_detect_data_types => ' || dbms_assert.enquote_literal('N') || ', ' || '
 				p_csv_col_delimiter => ' || dbms_assert.enquote_literal(p_Column_Delimiter) || ', ' || '
 				p_csv_enclosed => ' || v_Enclosed_By || ', ' || '
-				p_file_charset => ' || dbms_assert.enquote_literal(v_Character_Set) || ')) S' || chr(10) 
+				p_skip_rows => ' || to_char(v_Skip_Rows)  || ', ' || '
+				p_file_charset => ' || dbms_assert.enquote_literal(v_Character_Set) || ', ' || '
+				p_store_profile_to_collection => ' || dbms_assert.enquote_literal(v_Prof_Collection_Name) || ')) S' || chr(10) 
 			|| 'WHERE T.Name = ' || dbms_assert.enquote_literal(p_File_Name);
 			if apex_application.g_debug then
 				apex_debug.info('v_query : %s', v_query);
@@ -404,6 +408,10 @@ $IF upload_to_collection_plugin.g_has_data_parser $THEN
 				p_truncate_if_exists => 'YES'
 			);
 			p_Rows_Cnt := APEX_COLLECTION.COLLECTION_MEMBER_COUNT( p_collection_name );
+			SELECT LISTAGG(COLUMN_NAME, ':') WITHIN GROUP (ORDER BY COLUMN_POSITION) COLS
+			INTO p_Column_Headers
+			FROM APEX_COLLECTIONS S, (apex_data_parser.get_columns(S.clob001)) T
+			WHERE S.COLLECTION_NAME = v_Prof_Collection_Name;
 			p_Message  := 'OK';
 			return;
 		end if;
