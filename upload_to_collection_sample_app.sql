@@ -27,7 +27,7 @@ prompt APPLICATION 101 - Upload to Collection
 -- Application Export:
 --   Application:     101
 --   Name:            Upload to Collection
---   Date and Time:   21:33 Wednesday August 19, 2020
+--   Date and Time:   13:04 Thursday August 20, 2020
 --   Exported By:     DIRK
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -106,8 +106,9 @@ wwv_flow_api.create_flow(
 ,p_app_builder_icon_name=>'app-icon.svg'
 ,p_proxy_server=>nvl(wwv_flow_application_install.get_proxy,'')
 ,p_no_proxy_domains=>nvl(wwv_flow_application_install.get_no_proxy_domains,'')
-,p_flow_version=>'Release 1.0'
+,p_flow_version=>'Release 1.1'
 ,p_flow_status=>'AVAILABLE_W_EDIT_LINK'
+,p_flow_unavailable_text=>'This application is currently unavailable at this time.'
 ,p_exact_substitutions_only=>'Y'
 ,p_browser_cache=>'N'
 ,p_browser_frame=>'D'
@@ -117,7 +118,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Upload to Collection'
 ,p_last_updated_by=>'DIRK'
-,p_last_upd_yyyymmddhh24miss=>'20200819212808'
+,p_last_upd_yyyymmddhh24miss=>'20200820130210'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -10058,6 +10059,7 @@ wwv_flow_api.create_plugin(
 'Plugin for converting uploaded data to an apex collection.',
 '',
 'To use this plugin, navigate to a "XX - Data Load Source" page in your application.',
+'You can copy page 44 from the demo application to your application for that purpose.',
 'Create a Page process.',
 'Choose ''Process type'' "Plug-ins".',
 'Select Plug-in "Convert Upload to Apex Collection".',
@@ -10170,7 +10172,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_max_length=>28
 ,p_is_translatable=>false
 ,p_text_case=>'UPPER'
-,p_help_text=>'Define the maximum number of rows to be returned into the bad rows Item.'
+,p_help_text=>'Name of the APEX collection where the imported data is loaded.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(314376514344367658)
@@ -10183,9 +10185,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_default_value=>'Y'
 ,p_is_translatable=>false
-,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'Set this attribute to ''Yes'' when a Success Message should be displayed.',
-'The Message is of the form "Filtered uploaded data. Found %0 good rows and %1 bad rows." and is displayed, when a page branch with the option ''include process success message '' is followed.'))
+,p_help_text=>'Set this attribute to ''Yes'' when a Success Message should be displayed.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(233777031630714409)
@@ -10235,6 +10235,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_attribute_type=>'PAGE ITEM'
 ,p_is_required=>false
 ,p_is_translatable=>false
+,p_help_text=>'Enter the item name of page item where the column header names are loaded as a list. The elements are separated by the '':'' character.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(172204865276864324)
@@ -10242,11 +10243,14 @@ wwv_flow_api.create_plugin_attribute(
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>12
 ,p_display_sequence=>120
-,p_prompt=>'Use Apex Data Parser'
+,p_prompt=>'Use APEX Data Parser'
 ,p_attribute_type=>'CHECKBOX'
 ,p_is_required=>false
 ,p_default_value=>'Y'
 ,p_is_translatable=>false
+,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'When the Option is set to ''Yes'' the APEX Data Parser API will be used to parse your data. Additional file formats like .xls and JSON can be used as input.',
+'When set to ''No'' the build-in data parser is used and only .csv file and .txt with Unicode encoded files.'))
 );
 end;
 /
@@ -12742,7 +12746,7 @@ wwv_flow_api.create_page(
 '}'))
 ,p_page_template_options=>'#DEFAULT#'
 ,p_last_updated_by=>'DIRK'
-,p_last_upd_yyyymmddhh24miss=>'20200819171452'
+,p_last_upd_yyyymmddhh24miss=>'20200820125537'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(1275692572041639142)

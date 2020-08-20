@@ -37,6 +37,7 @@ wwv_flow_api.create_plugin(
 'Plugin for converting uploaded data to an apex collection.',
 '',
 'To use this plugin, navigate to a "XX - Data Load Source" page in your application.',
+'You can copy page 44 from the demo application to your application for that purpose.',
 'Create a Page process.',
 'Choose ''Process type'' "Plug-ins".',
 'Select Plug-in "Convert Upload to Apex Collection".',
@@ -149,7 +150,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_max_length=>28
 ,p_is_translatable=>false
 ,p_text_case=>'UPPER'
-,p_help_text=>'Define the maximum number of rows to be returned into the bad rows Item.'
+,p_help_text=>'Name of the APEX collection where the imported data is loaded.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(314376514344367658)
@@ -162,9 +163,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_default_value=>'Y'
 ,p_is_translatable=>false
-,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'Set this attribute to ''Yes'' when a Success Message should be displayed.',
-'The Message is of the form "Filtered uploaded data. Found %0 good rows and %1 bad rows." and is displayed, when a page branch with the option ''include process success message '' is followed.'))
+,p_help_text=>'Set this attribute to ''Yes'' when a Success Message should be displayed.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(233777031630714409)
@@ -214,6 +213,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_attribute_type=>'PAGE ITEM'
 ,p_is_required=>false
 ,p_is_translatable=>false
+,p_help_text=>'Enter the item name of page item where the column header names are loaded as a list. The elements are separated by the '':'' character.'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(172204865276864324)
@@ -221,11 +221,14 @@ wwv_flow_api.create_plugin_attribute(
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>12
 ,p_display_sequence=>120
-,p_prompt=>'Use Apex Data Parser'
+,p_prompt=>'Use APEX Data Parser'
 ,p_attribute_type=>'CHECKBOX'
 ,p_is_required=>false
 ,p_default_value=>'Y'
 ,p_is_translatable=>false
+,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'When the Option is set to ''Yes'' the APEX Data Parser API will be used to parse your data. Additional file formats like .xls and JSON can be used as input.',
+'When set to ''No'' the build-in data parser is used and only .csv file and .txt with Unicode encoded files.'))
 );
 end;
 /
