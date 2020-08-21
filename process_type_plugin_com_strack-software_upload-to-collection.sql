@@ -27,7 +27,7 @@ wwv_flow_api.create_plugin(
  p_id=>wwv_flow_api.id(313928966553718701)
 ,p_plugin_type=>'PROCESS TYPE'
 ,p_name=>'COM.STRACK-SOFTWARE.UPLOAD-TO-COLLECTION'
-,p_display_name=>'Upload to Apex Collection'
+,p_display_name=>'Upload to APEX Collection'
 ,p_supported_ui_types=>'DESKTOP:JQM_SMARTPHONE'
 ,p_api_version=>1
 ,p_execution_function=>'upload_to_collection_plugin.plugin_Upload_to_Collection'
@@ -64,7 +64,7 @@ wwv_flow_api.create_plugin(
 'The process is skipped when no data can be processed and one of the following success messages is returned:',
 '''Filename is empty.'', ''Line delimiter not found.'', ''Separator not found in the first line.''.',
 'the messages can be translated via entries in the Dynamic Translations Lists'))
-,p_version_identifier=>'1.0'
+,p_version_identifier=>'1.0.8'
 ,p_about_url=>'https://github.com/dstrack/strack-software-upload-to-collection-plugin.git'
 ,p_plugin_comment=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'The package upload_to_collection_plugin has to be installed in the application schema. ',

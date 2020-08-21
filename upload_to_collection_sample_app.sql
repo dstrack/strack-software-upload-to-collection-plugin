@@ -27,7 +27,7 @@ prompt APPLICATION 101 - Upload to Collection
 -- Application Export:
 --   Application:     101
 --   Name:            Upload to Collection
---   Date and Time:   13:04 Thursday August 20, 2020
+--   Date and Time:   20:13 Thursday August 20, 2020
 --   Exported By:     DIRK
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -118,7 +118,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Upload to Collection'
 ,p_last_updated_by=>'DIRK'
-,p_last_upd_yyyymmddhh24miss=>'20200820130210'
+,p_last_upd_yyyymmddhh24miss=>'20200820201310'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -10048,7 +10048,7 @@ wwv_flow_api.create_plugin(
  p_id=>wwv_flow_api.id(313928966553718701)
 ,p_plugin_type=>'PROCESS TYPE'
 ,p_name=>'COM.STRACK-SOFTWARE.UPLOAD-TO-COLLECTION'
-,p_display_name=>'Upload to Apex Collection'
+,p_display_name=>'Upload to APEX Collection'
 ,p_supported_ui_types=>'DESKTOP:JQM_SMARTPHONE'
 ,p_image_prefix => nvl(wwv_flow_application_install.get_static_plugin_file_prefix('PROCESS TYPE','COM.STRACK-SOFTWARE.UPLOAD-TO-COLLECTION'),'')
 ,p_api_version=>1
@@ -10086,7 +10086,7 @@ wwv_flow_api.create_plugin(
 'The process is skipped when no data can be processed and one of the following success messages is returned:',
 '''Filename is empty.'', ''Line delimiter not found.'', ''Separator not found in the first line.''.',
 'the messages can be translated via entries in the Dynamic Translations Lists'))
-,p_version_identifier=>'1.0'
+,p_version_identifier=>'1.0.8'
 ,p_about_url=>'https://github.com/dstrack/strack-software-upload-to-collection-plugin.git'
 ,p_plugin_comment=>wwv_flow_string.join(wwv_flow_t_varchar2(
 'The package upload_to_collection_plugin has to be installed in the application schema. ',
