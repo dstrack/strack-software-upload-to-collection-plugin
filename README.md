@@ -46,3 +46,5 @@ The package upload_to_collection_plugin has to be installed in the application s
 execute the file upload_to_collection_plsql_code.sql and v_apex_collections.sql to install the required database objects.
 You can add the file to the installation script of you application.
 
+A demo of the plugin can be found here: 
+https://apex.oracle.com/pls/apex/f?p=103003:LOGIN_DESKTOP
