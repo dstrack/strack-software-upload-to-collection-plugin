@@ -28,12 +28,12 @@ When the Region is created change some attributes:
 		Static Value : IMPORTED_DATA
 		
 2. Column 'SEQ_ID' 
-	Query Only 	: Yes 
+	Query Only : Yes,
 	Primary Key : Yes 
 	
 3. Process  - Save Interactive Grid Data
-	Prevent Lost Updates : No 
-	Lock Row : No 
+	Prevent Lost Updates : No,  
+	Lock Row : No,  
 	Return Primary Key(s) after Insert : No 
 
 This sample application demonstrates the usage of the plugin and the view v_apex_collections in an updatable interactive grid.
