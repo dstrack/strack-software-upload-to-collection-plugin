@@ -143,13 +143,29 @@ IS
 		p_Query IN CLOB,
 		p_Collection_Name IN VARCHAR2,
 		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
-	) RETURN VARCHAR2;
+	) RETURN VARCHAR2 DETERMINISTIC;
+
+	FUNCTION Create_Collection_From_Query (
+		p_collection_name		IN VARCHAR2,
+		p_query					IN VARCHAR2,
+		p_generate_md5 			IN VARCHAR2 DEFAULT 'NO',
+		p_truncate_if_exists 	IN VARCHAR2 DEFAULT 'NO',
+		p_From_View_Name 		IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2 DETERMINISTIC;
 
 	FUNCTION Access_Collection_Query2(
 		p_Query IN CLOB,
 		p_Collection_Name IN VARCHAR2,
 		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
-	) RETURN VARCHAR2;
+	) RETURN VARCHAR2 DETERMINISTIC;
+
+	FUNCTION Create_Collection_From_Query2 (
+		p_collection_name		IN VARCHAR2,
+		p_query					IN VARCHAR2,
+		p_generate_md5 			IN VARCHAR2 DEFAULT 'NO',
+		p_truncate_if_exists 	IN VARCHAR2 DEFAULT 'NO',
+		p_From_View_Name 		IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2 DETERMINISTIC;
 
 END upload_to_collection_plugin;
 ]';
@@ -676,7 +692,7 @@ $END
 		p_Query IN CLOB,
 		p_Collection_Name IN VARCHAR2,
 		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
-	) RETURN VARCHAR2
+	) RETURN VARCHAR2 DETERMINISTIC
 	is
 		v_cur INTEGER;
 		v_col_cnt INTEGER;
@@ -703,11 +719,33 @@ $END
 		|| 'WHERE COLLECTION_NAME = ' || dbms_assert.enquote_literal(p_Collection_Name);
 	end Access_Collection_Query;
 
+	FUNCTION Create_Collection_From_Query (
+		p_collection_name		IN VARCHAR2,
+		p_query					IN VARCHAR2,
+		p_generate_md5 			IN VARCHAR2 DEFAULT 'NO',
+		p_truncate_if_exists 	IN VARCHAR2 DEFAULT 'NO',
+		p_From_View_Name 		IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2 DETERMINISTIC
+	is
+	begin
+		APEX_COLLECTION.CREATE_COLLECTION_FROM_QUERY (
+			p_collection_name	=> p_collection_name,
+			p_query				=> p_query,
+			p_generate_md5		=> p_generate_md5,
+			p_truncate_if_exists=> p_truncate_if_exists
+		);
+		return Access_Collection_Query (
+			p_Query				=> p_Query,
+			p_Collection_Name	=> p_Collection_Name,
+			p_From_View_Name	=> p_From_View_Name
+		);
+	end Create_Collection_From_Query;
+	
 	FUNCTION Access_Collection_Query2(
 		p_Query IN CLOB,
 		p_Collection_Name IN VARCHAR2,
 		p_From_View_Name IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
-	) RETURN VARCHAR2
+	) RETURN VARCHAR2 DETERMINISTIC
 	is
 		v_cur INTEGER;
 		v_col_cnt INTEGER;
@@ -735,6 +773,29 @@ $END
 		|| 'FROM ' || dbms_assert.enquote_name(p_From_View_Name, FALSE) || chr(10) 
 		|| 'WHERE COLLECTION_NAME = ' || dbms_assert.enquote_literal(p_Collection_Name);
 	end Access_Collection_Query2;
+
+	FUNCTION Create_Collection_From_Query2 (
+		p_collection_name		IN VARCHAR2,
+		p_query					IN VARCHAR2,
+		p_generate_md5 			IN VARCHAR2 DEFAULT 'NO',
+		p_truncate_if_exists 	IN VARCHAR2 DEFAULT 'NO',
+		p_From_View_Name 		IN VARCHAR2 DEFAULT 'APEX_COLLECTIONS'
+	) RETURN VARCHAR2 DETERMINISTIC
+	is
+	begin
+		APEX_COLLECTION.CREATE_COLLECTION_FROM_QUERY2 (
+			p_collection_name	=> p_collection_name,
+			p_query				=> p_query,
+			p_generate_md5		=> p_generate_md5,
+			p_truncate_if_exists=> p_truncate_if_exists
+		);
+		return Access_Collection_Query2 (
+			p_Query				=> p_Query,
+			p_Collection_Name	=> p_Collection_Name,
+			p_From_View_Name	=> p_From_View_Name
+		);
+	end Create_Collection_From_Query2;
+	
 END upload_to_collection_plugin;
 /
 show errors
