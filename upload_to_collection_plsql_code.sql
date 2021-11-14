@@ -423,6 +423,7 @@ $IF upload_to_collection_plugin.g_has_data_parser $THEN
 				p_query => v_query,
 				p_truncate_if_exists => 'YES'
 			);
+			COMMIT;
 			p_Rows_Cnt := APEX_COLLECTION.COLLECTION_MEMBER_COUNT( p_collection_name );
 			SELECT LISTAGG(COLUMN_NAME, ':') WITHIN GROUP (ORDER BY COLUMN_POSITION) COLS
 			INTO p_Column_Headers
