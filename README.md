@@ -42,6 +42,8 @@ No pl/sql code is required to perform the DML operations.
 ----------
 ## Installation 
 
+Import the file process_type_plugin_com_strack-software_upload-to-collection.sql as type plug-in into your APEX app.
+
 The package upload_to_collection_plugin has to be installed in the application schema. 
 execute the file upload_to_collection_plsql_code.sql and v_apex_collections.sql to install the required database objects.
 You can add the file to the installation script of you application.
