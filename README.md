@@ -19,7 +19,26 @@ Create an IG Region based on a SQL Query :
 	where COLLECTION_NAME = 'IMPORTED_DATA'
 	
 When the Region is created change some attributes:
-1. Column 'COLLECTION_NAME'
+1. IG - Attributes 
+	- Edit 
+		- Enabled : Yes 
+		- Allowed Operations : Add Row, Update Row, Delete Row - Checked
+		- Lost Update Type : Row Values 
+
+	JavaScript Initialization Code
+	// this code forces the submit of the page for processing when SAVE is clicked, followed by a reload to refresh the grid content.
+	function(config) {
+		config.initActions = function( actions ) {
+			actions.lookup("save").action = function(event, focusElement) {
+				apex.page.submit( "SAVE" );
+			};
+			actions.update("save");
+		}
+		return config;
+	}
+
+		
+2. Column 'COLLECTION_NAME'
 	- Type : Hidden
 	- Query Only 	: No 
 	- Primary Key : No 
@@ -27,11 +46,15 @@ When the Region is created change some attributes:
 		- Type : Static
 		- Static Value : IMPORTED_DATA
 		
-2. Column 'SEQ_ID' 
-	- Query Only : Yes,
+3. Column 'SEQ_ID' 
+	- Query Only : No,
 	- Primary Key : Yes 
-	
-3. Process  - Save Interactive Grid Data
+	- Default  
+		- Default Type : PL/SQL Expression 
+		- PL/SQL Expression : Pipe_Apex_Collections.next_seq_id('IMPORTED_DATA')
+		- Duplicate Copies Existing Value: No
+		
+4. Process  - Save Interactive Grid Data
 	- Prevent Lost Updates : No,  
 	- Lock Row : No,  
 	- Return Primary Key(s) after Insert : No 
@@ -47,6 +70,9 @@ Import the file process_type_plugin_com_strack-software_upload-to-collection.sql
 The package upload_to_collection_plugin has to be installed in the application schema. 
 execute the file upload_to_collection_plsql_code.sql and v_apex_collections.sql to install the required database objects.
 You can add the file to the installation script of you application.
+
+The processing plugin transfers CSV data from a file upload into a APEX-Collection.
+Copy the file upload page from the sample app into your appliaction after installing the plug-in.
 
 A demo of the plugin can be found here: 
 https://apex.oracle.com/pls/apex/f?p=103003:LOGIN_DESKTOP

@@ -28,11 +28,15 @@ Usage:
 	INSERT INTO V_APEX_COLLECTIONS (COLLECTION_NAME, C001, ...)
 	VALUES('MY_COLLECTION', 'X', ...);
 	
+	You can use Default - PL/SQL Expression : Pipe_Apex_Collections.next_seq_id('IMPORTED_DATA') to initialize the column SEQ_ID before inserting.
+	You max use  Pipe_Apex_Collections.last_seq_id to retrieve the last used SEQ_ID after an insert.
+	
 	UPDATE V_APEX_COLLECTIONS SET C001 = 'X', ... WHERE COLLECTION_NAME = 'MY_COLLECTION' AND SEQ_ID = 1;
 
 	DELETE FROM V_APEX_COLLECTIONS WHERE COLLECTION_NAME = 'MY_COLLECTION' AND SEQ_ID = 1;
 	
 	SELECT C001, C002 FROM V_APEX_COLLECTIONS WHERE COLLECTION_NAME = 'MY_COLLECTION' AND SEQ_ID = 1;
+
 */
 
 CREATE OR REPLACE PACKAGE Pipe_Apex_Collections
@@ -41,6 +45,7 @@ IS
 	TYPE tab_apex_collections IS TABLE OF APEX_COLLECTIONS%ROWTYPE;
 	FUNCTION pipe_rows ( p_Collection_Name VARCHAR2 DEFAULT NULL ) RETURN tab_apex_collections PIPELINED;
 	FUNCTION next_seq_id ( p_Collection_Name VARCHAR2 ) RETURN NUMBER;
+	last_seq_id APEX_COLLECTIONS.SEQ_ID%TYPE;
 END;
 /
 show errors
@@ -75,7 +80,7 @@ $END
 		select NVL(MAX(SEQ_ID),0) + 1 INTO v_Result
 		from APEX_COLLECTIONS where COLLECTION_NAME = p_Collection_Name;
 		RETURN v_Result;
-	END;
+	END next_seq_id;
 END;
 /
 show errors
@@ -101,7 +106,7 @@ show errors
 
 CREATE OR REPLACE TRIGGER V_APEX_COLLECTIONS_IN_TR INSTEAD OF INSERT ON V_APEX_COLLECTIONS FOR EACH ROW 
 BEGIN
-    APEX_COLLECTION.ADD_MEMBER(
+    Pipe_Apex_Collections.last_seq_id := APEX_COLLECTION.ADD_MEMBER(
 		p_COLLECTION_NAME => :NEW.COLLECTION_NAME,
 		p_C001 => :NEW.C001,
 		p_C002 => :NEW.C002,
